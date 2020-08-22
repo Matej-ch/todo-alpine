@@ -11,30 +11,7 @@
 	</head>
 	<body>
 		<section class="todoapp"
-				 x-data="{
-					 todos: [],
-
-					 get active() {
-					 	return this.todos.filter(todo => !todo.completed)
-					 },
-
-					 newTodo: '',
-					 addTodo() {
-					 	this.todos.push({
-					 		id: this.todos.length + 1,
-					 		body: this.newTodo,
-					 		completed: false,
-					 	});
-					 	this.newTodo = '';
-					 },
-					 deleteTodo(todo) {
-					 	let position = this.todos.indexOf(todo);
-					 	this.todos.splice(position,1);
-					 },
-					 completeTodo(todo) {
-					 	todo.completed = !todo.completed;
-					 }
-				 }">
+				 x-data="todos()">
 
 			<header class="header">
 				<h1>todos</h1>
@@ -46,40 +23,45 @@
 				<label for="toggle-all">Mark all as complete</label>
 				<ul class="todo-list">
 					<!-- List items should get the class `editing` when editing and `completed` when marked as completed -->
-					<template x-for="todo in todos" :key="todo.id">
-						<li :class="{ completed: todo.completed}">
+					<template x-for="todo in filteredTodos" :key="todo.id">
+						<li :class="{
+						editing: todo === editedTodo ,
+						completed: todo.completed
+						}">
 							<div class="view">
-								<input @click="completeTodo(todo)" class="toggle" type="checkbox">
+								<input x-model="todo.completed"
+										@click="completeTodo(todo)" class="toggle" type="checkbox">
 
-								<label x-text="todo.body"></label>
+								<label x-text="todo.body" @dblclick="editTodo(todo)"></label>
 
 								<button class="destroy" @click="deleteTodo(todo)"></button>
 							</div>
 
-							<input class="edit" value="Rule the web">
+							<input class="edit"
+								   x-model="todo.body"
+								   @keyup.enter="editComplete(todo)"
+								   @keyup.escape="cancelEdit(todo)">
 						</li>
 					</template>
 				</ul>
 			</section>
 
-			<!-- This footer should hidden by default and shown when there are todos -->
 			<footer class="footer" x-show="todos.length">
-				<!-- This should be `0 items left` by default -->
+
 				<span class="todo-count"><strong x-text="active.length"></strong> item left</span>
-				<!-- Remove this if you don't implement routing -->
 				<ul class="filters">
 					<li>
-						<a class="selected" href="#/">All</a>
+						<a @click.prevent="filter= 'all'" :class="{selected: filter === 'all'}" href="#">All</a>
 					</li>
 					<li>
-						<a href="#/active">Active</a>
+						<a @click.prevent="filter= 'active'" :class="{selected: filter === 'active'}" href="#">Active</a>
 					</li>
 					<li>
-						<a href="#/completed">Completed</a>
+						<a @click.prevent="filter= 'completed'" :class="{selected: filter === 'completed'}" href="#">Completed</a>
 					</li>
 				</ul>
-				<!-- Hidden if no completed items are left ↓ -->
-				<button class="clear-completed" x-show="active.length">Clear completed</button>
+
+				<button class="clear-completed" @click="todos = active" x-show="completed.length">Clear completed</button>
 			</footer>
 		</section>
 		<footer class="info">
@@ -92,5 +74,6 @@
 		<!-- Scripts here. Don't remove ↓ -->
 		<script src="node_modules/todomvc-common/base.js"></script>
 		<script src="js/app.js"></script>
+		<script src="js/todos.js"></script>
 	</body>
 </html>

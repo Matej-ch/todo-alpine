@@ -1,7 +1,15 @@
+window.todoStore = {
+	todos: JSON.parse(localStorage.getItem('todo-store') || '[]'),
+
+	save() {
+		localStorage.setItem('todo-store', JSON.stringify(this.todos));
+	}
+}
+
 window.todos = function () {
 
 	return {
-		todos: [],
+		...todoStore,
 
 		newTodo: '',
 
@@ -40,16 +48,23 @@ window.todos = function () {
 				body: this.newTodo,
 				completed: false,
 			});
+
+			this.save();
+
 			this.newTodo = '';
 		},
 
 		deleteTodo(todo) {
 			let position = this.todos.indexOf(todo);
 			this.todos.splice(position,1);
+
+			this.save();
 		},
 
 		completeTodo(todo) {
 			todo.completed = !todo.completed;
+
+			this.save();
 		},
 
 		editTodo(todo) {
@@ -72,13 +87,23 @@ window.todos = function () {
 			}
 
 			this.editedTodo = null;
+
+			this.save();
 		},
 
 		toggleAllTodos() {
 			let allComplete = this.allComplete;
 
-			this.todos.forEach( todo => todo.completed = !allComplete);
-		}
+			this.todos.forEach(todo => todo.completed = !allComplete);
+
+			this.save();
+		},
+
+		clearCompleted() {
+			this.todos = this.active;
+
+			this.save();
+		},
 	}
 
 }

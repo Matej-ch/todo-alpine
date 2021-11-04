@@ -2,9 +2,17 @@ window.todoStore = {
 	todos: JSON.parse(localStorage.getItem('todo-store') || '[]'),
 
 	save() {
-		localStorage.setItem('todo-store', JSON.stringify(this.todos));
+		if (!window.indexedDB) {
+			localStorage.setItem('todo-store', JSON.stringify(this.todos));
+		} else {
+
+		}
 	}
 }
+
+window.DB_NAME = 'demo-indexeddb-todos';
+window.DB_VERSION = 1; // Use a long long for this value (don't use a float)
+window.DB_STORE_NAME = 'todos';
 
 window.todos = function () {
 
@@ -36,6 +44,10 @@ window.todos = function () {
 
 		get allComplete() {
 			return this.completed.length === this.todos.length;
+		},
+
+		openDB() {
+			console.log('open db');
 		},
 
 		addTodo() {

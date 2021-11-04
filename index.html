@@ -3,18 +3,16 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Template • TodoMVC</title>
-		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
-		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+		<title>Todo with alpine</title>
 		<link rel="stylesheet" href="css/app.css">
 		<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.3.5/dist/alpine.min.js" defer></script>
 	</head>
 	<body>
 		<section class="todoapp"
-				 x-data="todos()">
+				 x-data="todos()"  x-init="openDB()">
 
 			<header class="header">
-				<h1>todos</h1>
+				<h1 x-html="'todos'.charAt(0).toUpperCase() + 'todos'.slice(1);"></h1>
 				<input x-model="newTodo" @keyup.enter="addTodo" class="new-todo" placeholder="What needs to be done?" autofocus>
 			</header>
 
@@ -68,9 +66,6 @@
 		</section>
 		<footer class="info">
 			<p>Double-click to edit a todo</p>
-			<!-- Change this out with your name and url ↓ -->
-			<p>Created by <a href="http://todomvc.com">Matej Ch.</a></p>
-			<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
 		</footer>
 
 		<!-- Scripts here. Don't remove ↓ -->

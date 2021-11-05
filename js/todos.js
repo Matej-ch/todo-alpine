@@ -11,7 +11,7 @@ window.todoStore = {
 }
 
 window.DB_NAME = 'demo-indexeddb-todos';
-window.DB_VERSION = 1; // Use a long long for this value (don't use a float)
+window.DB_VERSION = 3; // Use a long long for this value (don't use a float)
 window.DB_STORE_NAME = 'todos';
 
 window.todos = function () {
@@ -24,6 +24,8 @@ window.todos = function () {
 		editedTodo: null,
 
 		filter: 'all',
+
+		db:null,
 
 		get filteredTodos() {
 
@@ -47,7 +49,24 @@ window.todos = function () {
 		},
 
 		openDB() {
-			console.log('open db');
+			console.log('openingDB');
+			const req = indexedDB.open(window.DB_NAME, window.DB_VERSION);
+			req.onsuccess = function (evt) {
+				this.db = this.result;
+				console.log("openingDB DONE");
+			};
+			req.onerror = function (evt) {
+				console.error("openingDB error:", evt.target.errorCode);
+			};
+
+			req.onupgradeneeded = function (evt) {
+				console.log("openDb.onupgradeneeded");
+				const store = evt.currentTarget.result.createObjectStore(window.DB_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+
+				store.createIndex('id', 'id', { unique: true });
+				store.createIndex('body', 'body', { unique: false });
+				store.createIndex('completed', 'completed', { unique: false });
+			};
 		},
 
 		addTodo() {

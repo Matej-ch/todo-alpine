@@ -2,17 +2,18 @@ window.todoStore = {
 	todos: JSON.parse(localStorage.getItem('todo-store') || '[]'),
 
 	save() {
-		if (!window.indexedDB) {
+		//if (!window.indexedDB) {
 			localStorage.setItem('todo-store', JSON.stringify(this.todos));
-		} else {
+		/*} else {
 
-		}
-	}
+		}*/
+	},
 }
 
 window.DB_NAME = 'demo-indexeddb-todos';
-window.DB_VERSION = 3; // Use a long long for this value (don't use a float)
+window.DB_VERSION = 3;
 window.DB_STORE_NAME = 'todos';
+window.db = null;
 
 window.todos = function () {
 
@@ -25,7 +26,7 @@ window.todos = function () {
 
 		filter: 'all',
 
-		db:null,
+		//db:null,
 
 		get filteredTodos() {
 
@@ -52,7 +53,7 @@ window.todos = function () {
 			console.log('openingDB');
 			const req = indexedDB.open(window.DB_NAME, window.DB_VERSION);
 			req.onsuccess = function (evt) {
-				this.db = this.result;
+				window.db = this.result;
 				console.log("openingDB DONE");
 			};
 			req.onerror = function (evt) {
@@ -69,18 +70,52 @@ window.todos = function () {
 			};
 		},
 
+		saveDB(todo) {
+			const store = this.getObjectStore(window.DB_STORE_NAME, 'readwrite');
+			let req;
+
+			try {
+				req = store.add(todo);
+			} catch (e) {
+				if (e.name === 'DataCloneError')
+					throw e;
+			}
+
+			req.onsuccess = function (evt) {
+				console.log("Insertion in DB successful");
+				//displayActionSuccess();
+				//displayPubList(store);
+			};
+			req.onerror = function() {
+				console.error("addPublication error", this.error);
+				//displayActionFailure(this.error);
+			};
+
+		},
+		getObjectStore(store_name, mode) {
+			const tx = window.db.transaction(store_name, mode);
+			return tx.objectStore(store_name);
+		},
+
 		addTodo() {
 			if(!this.newTodo) {
 				return;
 			}
 
+			const todoDate = Date.now();
 			this.todos.push({
-				id: Date.now(),
+				id: todoDate,
 				body: this.newTodo,
 				completed: false,
 			});
 
 			this.save();
+
+			this.saveDB({
+				id: todoDate,
+				body: this.newTodo,
+				completed: false,
+			});
 
 			this.newTodo = '';
 		},
@@ -136,5 +171,4 @@ window.todos = function () {
 			this.save();
 		},
 	}
-
 }

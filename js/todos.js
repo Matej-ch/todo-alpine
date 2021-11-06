@@ -6,7 +6,7 @@ window.db = null;
 window.todos = function () {
 
 	return {
-		todos: JSON.parse(localStorage.getItem('todo-store') || '[]'),
+		todos: [],
 
 		save() {
 			localStorage.setItem('todo-store', JSON.stringify(this.todos));
@@ -47,6 +47,29 @@ window.todos = function () {
 			req.onsuccess = function (evt) {
 				window.db = this.result;
 				console.log("openingDB DONE");
+
+
+				var objectStore = window.db.transaction(window.DB_STORE_NAME).objectStore(window.DB_STORE_NAME);
+
+				objectStore.openCursor().onsuccess = function(event) {
+					var cursor = event.target.result;
+					if (cursor) {
+
+						this.todos.push({
+							id: cursor.key,
+							body: cursor.value.body,
+							completed: cursor.value.completed,
+						})
+
+						console.log("Name for SSN " + cursor.key + " is " + cursor.value.body);
+						cursor.continue();
+					}
+					else {
+						console.log("No more entries!");
+					}
+				};
+
+
 			};
 			req.onerror = function (evt) {
 				console.error("openingDB error:", evt.target.errorCode);

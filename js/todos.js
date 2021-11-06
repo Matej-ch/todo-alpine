@@ -124,7 +124,59 @@ window.todos = function () {
 			let position = this.todos.indexOf(todo);
 			this.todos.splice(position,1);
 
+			this.deleteTodoDB(todo.id);
+
 			this.save();
+
+		},
+
+		deleteTodoDB(id) {
+
+			console.log("deletePublication:", arguments);
+			const store = this.getObjectStore(window.DB_STORE_NAME, 'readwrite');
+			let req = store.index('id');
+
+			req.get(id).onsuccess = function(evt) {
+				if (typeof evt.target.result == 'undefined') {
+					console.log("No matching record found");
+					return;
+				}
+
+				// As per spec http://www.w3.org/TR/IndexedDB/#object-store-deletion-operation
+				// the result of the Object Store Deletion Operation algorithm is
+				// undefined, so it's not possible to know if some records were actually
+				// deleted by looking at the request result.
+				let todorReq = store.get(evt.target.result.id);
+
+				todorReq.onsuccess = function(evt) {
+					var record = evt.target.result;
+					console.log("record:", record);
+					if (typeof record == 'undefined') {
+						console.log("No matching record found");
+						return;
+					}
+					// Warning: The exact same key used for creation needs to be passed for
+					// the deletion. If the key was a Number for creation, then it needs to
+					// be a Number for deletion.
+					var deleteReq = store.delete(evt.target.result.id);
+					deleteReq.onsuccess = function(evt) {
+						console.log("evt:", evt);
+						console.log("evt.target:", evt.target);
+						console.log("evt.target.result:", evt.target.result);
+						console.log("delete successful");
+					};
+					deleteReq.onerror = function (evt) {
+						console.error("deletePublication:", evt.target.errorCode);
+					};
+				};
+				todorReq.onerror = function (evt) {
+					console.error("deletePublication:", evt.target.errorCode);
+				};
+			}
+			req.onerror = function (evt) {
+				console.error("deletePublicationFromBib:", evt.target.errorCode);
+			};
+
 		},
 
 		completeTodo(todo) {

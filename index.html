@@ -5,11 +5,11 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Todo with alpine</title>
 		<link rel="stylesheet" href="css/app.css">
-		<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.3.5/dist/alpine.min.js" defer></script>
+		<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 	</head>
 	<body>
 		<section class="todoapp"
-				 x-data="todos()"  x-init="openDB()">
+				 x-data="todos">
 
 			<header class="header">
 				<h1 x-html="'todos'.charAt(0).toUpperCase() + 'todos'.slice(1);"></h1>
@@ -63,6 +63,15 @@
 
 				<button class="clear-completed" @click="clearCompleted" x-show="completed.length">Clear completed</button>
 			</footer>
+
+			<div class="events" x-show="events.length">
+
+				<template x-for="event in events">
+					<div class="event" x-text="event.message"></div>
+				</template>
+
+			</div>
+
 		</section>
 		<footer class="info">
 			<p>Double-click to edit a todo</p>

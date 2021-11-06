@@ -1,15 +1,3 @@
-window.todoStore = {
-	todos: JSON.parse(localStorage.getItem('todo-store') || '[]'),
-
-	save() {
-		//if (!window.indexedDB) {
-			localStorage.setItem('todo-store', JSON.stringify(this.todos));
-		/*} else {
-
-		}*/
-	},
-}
-
 window.DB_NAME = 'demo-indexeddb-todos';
 window.DB_VERSION = 3;
 window.DB_STORE_NAME = 'todos';
@@ -18,15 +6,19 @@ window.db = null;
 window.todos = function () {
 
 	return {
-		...todoStore,
+		todos: JSON.parse(localStorage.getItem('todo-store') || '[]'),
+
+		save() {
+			localStorage.setItem('todo-store', JSON.stringify(this.todos));
+		},
+
+		events: {},
 
 		newTodo: '',
 
 		editedTodo: null,
 
 		filter: 'all',
-
-		//db:null,
 
 		get filteredTodos() {
 
@@ -49,7 +41,7 @@ window.todos = function () {
 			return this.completed.length === this.todos.length;
 		},
 
-		openDB() {
+		init() {
 			console.log('openingDB');
 			const req = indexedDB.open(window.DB_NAME, window.DB_VERSION);
 			req.onsuccess = function (evt) {
@@ -70,6 +62,10 @@ window.todos = function () {
 			};
 		},
 
+		loadTodos() {
+
+		},
+
 		saveDB(todo) {
 			const store = this.getObjectStore(window.DB_STORE_NAME, 'readwrite');
 			let req;
@@ -83,12 +79,9 @@ window.todos = function () {
 
 			req.onsuccess = function (evt) {
 				console.log("Insertion in DB successful");
-				//displayActionSuccess();
-				//displayPubList(store);
 			};
 			req.onerror = function() {
 				console.error("addPublication error", this.error);
-				//displayActionFailure(this.error);
 			};
 
 		},

@@ -42,16 +42,20 @@ window.todos = function () {
 			return this.completed.length === this.todos.length;
 		},
 
-		async init() {
+		init() {
 			console.log('openingDB');
-			const req = await indexedDB.open(this.db_name, this.db_version);
+			const req = indexedDB.open(this.db_name, this.db_version);
+
+			//this.db_name = 'demo-indexeddb-todos';
+			//this.db_version = 3;
+			//this.db_store_name = 'todos';
 
 			req.onsuccess = function (evt) {
 				window.db = this.result;
 				console.log("openingDB DONE");
 
 
-				var objectStore = window.db.transaction(this.db_store_name).objectStore(this.db_store_name);
+				var objectStore = window.db.transaction('todos').objectStore('todos');
 
 				objectStore.openCursor().onsuccess = function(event) {
 					var cursor = event.target.result;

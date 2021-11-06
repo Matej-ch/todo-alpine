@@ -1,6 +1,3 @@
-window.DB_NAME = 'demo-indexeddb-todos';
-window.DB_VERSION = 3;
-window.DB_STORE_NAME = 'todos';
 window.db = null;
 
 window.todos = function () {
@@ -13,6 +10,10 @@ window.todos = function () {
 		},
 
 		events: {},
+
+		db_name:'demo-indexeddb-todos',
+		db_version: 3,
+		db_store_name:'todos',
 
 		newTodo: '',
 
@@ -41,25 +42,26 @@ window.todos = function () {
 			return this.completed.length === this.todos.length;
 		},
 
-		init() {
+		async init() {
 			console.log('openingDB');
-			const req = indexedDB.open(window.DB_NAME, window.DB_VERSION);
+			const req = await indexedDB.open(this.db_name, this.db_version);
+
 			req.onsuccess = function (evt) {
 				window.db = this.result;
 				console.log("openingDB DONE");
 
 
-				var objectStore = window.db.transaction(window.DB_STORE_NAME).objectStore(window.DB_STORE_NAME);
+				var objectStore = window.db.transaction(this.db_store_name).objectStore(this.db_store_name);
 
 				objectStore.openCursor().onsuccess = function(event) {
 					var cursor = event.target.result;
 					if (cursor) {
 
-						this.todos.push({
+						console.log({
 							id: cursor.key,
 							body: cursor.value.body,
 							completed: cursor.value.completed,
-						})
+						});
 
 						console.log("Name for SSN " + cursor.key + " is " + cursor.value.body);
 						cursor.continue();
@@ -77,7 +79,7 @@ window.todos = function () {
 
 			req.onupgradeneeded = function (evt) {
 				console.log("openDb.onupgradeneeded");
-				const store = evt.currentTarget.result.createObjectStore(window.DB_STORE_NAME, { keyPath: 'id', autoIncrement: true });
+				const store = evt.currentTarget.result.createObjectStore(this.db_store_name, { keyPath: 'id', autoIncrement: true });
 
 				store.createIndex('id', 'id', { unique: true });
 				store.createIndex('body', 'body', { unique: false });
@@ -90,7 +92,7 @@ window.todos = function () {
 		},
 
 		saveDB(todo) {
-			const store = this.getObjectStore(window.DB_STORE_NAME, 'readwrite');
+			const store = this.getObjectStore(this.db_store_name, 'readwrite');
 			let req;
 
 			try {
@@ -149,7 +151,7 @@ window.todos = function () {
 		deleteTodoDB(id) {
 
 			console.log("deletePublication:", arguments);
-			const store = this.getObjectStore(window.DB_STORE_NAME, 'readwrite');
+			const store = this.getObjectStore(this.db_store_name, 'readwrite');
 			let req = store.index('id');
 
 			req.get(id).onsuccess = function(evt) {

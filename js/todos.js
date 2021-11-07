@@ -1,6 +1,6 @@
 window.db = null;
 
-window.todos = function () {
+function todoApp () {
 
 	return {
 		todos: [],
@@ -21,7 +21,34 @@ window.todos = function () {
 
 		filter: 'all',
 
-		get filteredTodos() {
+		async get filteredTodos() {
+
+			const req = indexedDB.open(this.db_name, this.db_version)
+
+
+			req.onsuccess = function (evt) {
+				window.db = this.result;
+			}
+
+			const objectStore = await window.db.transaction('todos').objectStore('todos');
+
+			objectStore.openCursor().onsuccess = function(event) {
+				let cursor = event.target.result;
+				if (cursor) {
+
+					console.log({
+						id: cursor.key,
+						body: cursor.value.body,
+						completed: cursor.value.completed,
+					});
+
+					console.log("Name for SSN " + cursor.key + " is " + cursor.value.body);
+					cursor.continue();
+				}
+				else {
+					console.log("No more entries!");
+				}
+			};
 
 			return {
 				all: this.todos,
@@ -42,9 +69,9 @@ window.todos = function () {
 			return this.completed.length === this.todos.length;
 		},
 
-		init() {
+		async init() {
 			console.log('openingDB');
-			const req = indexedDB.open(this.db_name, this.db_version);
+			const req = await indexedDB.open(this.db_name, this.db_version);
 
 			//this.db_name = 'demo-indexeddb-todos';
 			//this.db_version = 3;
@@ -55,7 +82,7 @@ window.todos = function () {
 				console.log("openingDB DONE");
 
 
-				var objectStore = window.db.transaction('todos').objectStore('todos');
+				/*var objectStore = window.db.transaction('todos').objectStore('todos');
 
 				objectStore.openCursor().onsuccess = function(event) {
 					var cursor = event.target.result;
@@ -73,7 +100,7 @@ window.todos = function () {
 					else {
 						console.log("No more entries!");
 					}
-				};
+				};*/
 
 
 			};

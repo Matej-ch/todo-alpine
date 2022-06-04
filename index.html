@@ -5,11 +5,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Todo with alpine</title>
 		<link rel="stylesheet" href="css/app.css">
-		<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+		<script src="//unpkg.com/alpinejs" defer></script>
 	</head>
 	<body>
-		<section class="todoapp"
-				 x-data="todoApp()">
+		<section class="todoapp" x-data="todo()">
 
 			<header class="header">
 				<h1 x-html="'todos'.charAt(0).toUpperCase() + 'todos'.slice(1);"></h1>

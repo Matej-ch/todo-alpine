@@ -1,6 +1,4 @@
-window.db = null;
-
-function todoApp () {
+function todo () {
 
 	return {
 		todos: [],
@@ -21,7 +19,11 @@ function todoApp () {
 
 		filter: 'all',
 
-		async get filteredTodos() {
+		get filteredTodos() {
+			return this.todos;
+		},
+
+		/*async get filteredTodos() {
 
 			const req = indexedDB.open(this.db_name, this.db_version)
 
@@ -55,7 +57,7 @@ function todoApp () {
 				active: this.active,
 				completed: this.completed
 			}[this.filter];
-		},
+		},*/
 
 		get active() {
 			return this.todos.filter(todo => !todo.completed)
@@ -69,7 +71,7 @@ function todoApp () {
 			return this.completed.length === this.todos.length;
 		},
 
-		async init() {
+		/*async init() {
 			console.log('openingDB');
 			const req = await indexedDB.open(this.db_name, this.db_version);
 
@@ -82,7 +84,7 @@ function todoApp () {
 				console.log("openingDB DONE");
 
 
-				/*var objectStore = window.db.transaction('todos').objectStore('todos');
+				var objectStore = window.db.transaction('todos').objectStore('todos');
 
 				objectStore.openCursor().onsuccess = function(event) {
 					var cursor = event.target.result;
@@ -100,7 +102,7 @@ function todoApp () {
 					else {
 						console.log("No more entries!");
 					}
-				};*/
+				};
 
 
 			};
@@ -116,7 +118,7 @@ function todoApp () {
 				store.createIndex('body', 'body', { unique: false });
 				store.createIndex('completed', 'completed', { unique: false });
 			};
-		},
+		},*/
 
 		loadTodos() {
 

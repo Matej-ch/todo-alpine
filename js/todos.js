@@ -99,74 +99,14 @@ function todo () {
 
 		styles: {success: 'success',danger:'danger', info:'info', warning: 'warning'},
 
-		/*get filteredTodos() {
-
-			let transaction = '';
-			try {
-				transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName, 'readonly');
-			} catch (ex) {
-				this.events.push({message: `this.dbGlobals.db.transaction exception in filteredTodos() - ${ex.message}`});
-				return;
-			}
-
-			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
-
-			const cursorRequest = objectStore.openCursor();
-
-			cursorRequest.onerror = (evt) => {
-				this.events.push({message: "cursorRequest.onerror fired in displayDB() - error code: " + (evt.target.error ? evt.target.error : evt.target.errorCode)});
-			}
-
-			let tempTodos = [];
-			cursorRequest.onsuccess = (evt) => {
-
-				var cursor = evt.target.result;
-				if (cursor) {
-					tempTodos.push({body: cursor.value.body,id:cursor.value.id})
-					console.log(cursor.value);
-					cursor.continue();
-				}
-			}
-
-			this.todos = tempTodos;
-			return this.todos;
-		},*/
-
-		/*async get filteredTodos() {
-
-			const req = indexedDB.open(this.db_name, this.db_version)
-
-
-			req.onsuccess = function (evt) {
-				window.db = this.result;
-			}
-
-			const objectStore = await window.db.transaction('todos').objectStore('todos');
-
-			objectStore.openCursor().onsuccess = function(event) {
-				let cursor = event.target.result;
-				if (cursor) {
-
-					console.log({
-						id: cursor.key,
-						body: cursor.value.body,
-						completed: cursor.value.completed,
-					});
-
-					console.log("Name for SSN " + cursor.key + " is " + cursor.value.body);
-					cursor.continue();
-				}
-				else {
-					console.log("No more entries!");
-				}
-			};
+		get filteredTodos() {
 
 			return {
 				all: this.todos,
 				active: this.active,
 				completed: this.completed
 			}[this.filter];
-		},*/
+		},
 
 		get active() {
 			return this.todos.filter(todo => !todo.completed)
@@ -179,55 +119,6 @@ function todo () {
 		get allComplete() {
 			return this.completed.length === this.todos.length;
 		},
-
-		/*async init() {
-			console.log('openingDB');
-			const req = await indexedDB.open(this.db_name, this.db_version);
-
-			//this.db_name = 'demo-indexeddb-todos';
-			//this.db_version = 3;
-			//this.db_store_name = 'todos';
-
-			req.onsuccess = function (evt) {
-				window.db = this.result;
-				console.log("openingDB DONE");
-
-
-				var objectStore = window.db.transaction('todos').objectStore('todos');
-
-				objectStore.openCursor().onsuccess = function(event) {
-					var cursor = event.target.result;
-					if (cursor) {
-
-						console.log({
-							id: cursor.key,
-							body: cursor.value.body,
-							completed: cursor.value.completed,
-						});
-
-						console.log("Name for SSN " + cursor.key + " is " + cursor.value.body);
-						cursor.continue();
-					}
-					else {
-						console.log("No more entries!");
-					}
-				};
-
-
-			};
-			req.onerror = function (evt) {
-				console.error("openingDB error:", evt.target.errorCode);
-			};
-
-			req.onupgradeneeded = function (evt) {
-				console.log("openDb.onupgradeneeded");
-				const store = evt.currentTarget.result.createObjectStore(this.db_store_name, { keyPath: 'id', autoIncrement: true });
-
-				store.createIndex('id', 'id', { unique: true });
-				store.createIndex('body', 'body', { unique: false });
-				store.createIndex('completed', 'completed', { unique: false });
-			};
-		},*/
 
 		saveDB(todo) {
 
@@ -310,10 +201,10 @@ function todo () {
 					this.events.push({message: `TODO ${todo.body} cannot be updated. Error: ${event.target.errorCode}`,type:'danger'});
 				};
 				requestUpdate.onsuccess = event => {
-					todo.completed = !todo.completed;
 					this.events.push({message: `TODO ${todo.body} Updated.`,type:'success'});
 				};
 			}
+			todo.completed = !todo.completed;
 		},
 
 		editTodo(todo) {

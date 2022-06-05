@@ -400,7 +400,7 @@ body {
 }
 
 .footer {
-	padding: 10px 15px;
+	padding: 1rem 15px;
 	height: 20px;
 	text-align: center;
 	font-size: 15px;
@@ -474,28 +474,6 @@ html .clear-completed:active {
 	text-decoration: underline;
 }
 
-.info {
-	margin: 65px auto 0;
-	color: #4d4d4d;
-	font-size: 11px;
-	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-	text-align: center;
-}
-
-.info p {
-	line-height: 1;
-}
-
-.info a {
-	color: inherit;
-	text-decoration: none;
-	font-weight: 400;
-}
-
-.info a:hover {
-	text-decoration: underline;
-}
-
 /*
 	Hack to remove background from Mobile Safari.
 	Can't use it globally since it destroys checkboxes in Firefox
@@ -519,4 +497,20 @@ html .clear-completed:active {
 	.filters {
 		bottom: 10px;
 	}
+}
+
+.success {
+	background-color: rgb(74 222 128);
+}
+
+.danger {
+	background-color: rgb(251 113 133);
+}
+
+.info {
+	background-color: rgb(34 211 238);
+}
+
+.warning {
+	background-color: rgb(250 204 21);
 }

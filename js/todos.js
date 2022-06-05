@@ -3,7 +3,7 @@ function todo () {
 	return {
 
 		init() {
-			this.events.push({message: `Alpine initialization start`});
+			this.events.push({message: `Alpine initialization start`,type:'info'});
 			this.dbGlobals.db = null; // The database object will eventually be stored here.
 			this.dbGlobals.description = "This database is used to store files locally."; // The description of the database.
 			this.dbGlobals.name = "localFileStorage"; // The name of the database.
@@ -15,7 +15,7 @@ function todo () {
 
 			this.$nextTick(() => {this.loadTodos()});
 
-			this.events.push({message: `Alpine initialization ended`});
+			this.events.push({message: `Alpine initialization ended`,type:'info'});
 		},
 
 		openDB() {
@@ -23,12 +23,12 @@ function todo () {
 				let openRequest = window.indexedDB.open(this.dbGlobals.name, this.dbGlobals.version); // Also passing an optional version number for this database.
 
 				openRequest.onerror = (event) => {
-					this.events.push({message: "openRequest.onerror fired in openDB() - error: " + (event.target.error ? event.target.error : event.target.errorCode)});
+					this.events.push({message: "openRequest.onerror fired in openDB() - error: " + (event.target.error ? event.target.error : event.target.errorCode),type:'danger'});
 				}
 
 				openRequest.onblocked = (event) => {
-					this.events.push({message: `The database is blocked - error code: + ${(event.target.error ? event.target.error : event.target.errorCode)}`});
-					this.events.push({message: `If this page is open in other browser windows, close these windows.`});
+					this.events.push({message: `The database is blocked - error code: + ${(event.target.error ? event.target.error : event.target.errorCode)}`,type:'warning'});
+					this.events.push({message: `If this page is open in other browser windows, close these windows.`,type:'info'});
 				};
 
 				openRequest.onupgradeneeded = (event) => {
@@ -39,19 +39,19 @@ function todo () {
 							keyPath: "ID",
 							autoIncrement: true
 						});
-						this.events.push({message: `Object store ${this.dbGlobals.storeName} created`});
+						this.events.push({message: `Object store ${this.dbGlobals.storeName} created`,type:'success'});
 					} catch (ex) {
-						this.events.push({message: `Exception in onupgradeneeded - ${ex.message}`});
+						this.events.push({message: `Exception in onupgradeneeded - ${ex.message}`,type:'danger'});
 					}
 
 				};
 
 				openRequest.onsuccess = (event) => {
 					this.dbGlobals.db = event.target.result;
-					this.events.push({message: "Databased successfully opened"});
+					this.events.push({message: "Databased successfully opened",type:'success'});
 				};
 			} catch (ex) {
-				this.events.push({message: `window.indexedDB.open exception in openDB() - ${ex.message}`});
+				this.events.push({message: `window.indexedDB.open exception in openDB() - ${ex.message}`,type:'danger'});
 			}
 		},
 
@@ -61,7 +61,7 @@ function todo () {
 			try {
 				transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName, 'readonly');
 			} catch (ex) {
-				this.events.push({message: `this.dbGlobals.db.transaction exception in loadTodos() - ${ex.message}`});
+				this.events.push({message: `this.dbGlobals.db.transaction exception in loadTodos() - ${ex.message}`,type:'danger'});
 				return;
 			}
 
@@ -70,7 +70,7 @@ function todo () {
 			const cursorRequest = objectStore.openCursor();
 
 			cursorRequest.onerror = (evt) => {
-				this.events.push({message: "cursorRequest.onerror fired in displayDB() - error code: " + (evt.target.error ? evt.target.error : evt.target.errorCode)});
+				this.events.push({message: "cursorRequest.onerror fired in displayDB() - error code: " + (evt.target.error ? evt.target.error : evt.target.errorCode),type:'danger'});
 			}
 
 			cursorRequest.onsuccess = (evt) => {
@@ -96,6 +96,8 @@ function todo () {
 		editedTodo: null,
 
 		filter: 'all',
+
+		styles: {success: 'success',danger:'danger', info:'info', warning: 'warning'},
 
 		/*get filteredTodos() {
 
@@ -234,18 +236,13 @@ function todo () {
 
 			const request = objectStore.add(todo);
 			request.onsuccess = event => {
-				this.events.push({message: `TODO ${todo.body} Saved to DB`});
+				this.events.push({message: `TODO ${todo.body} Saved to DB`,type:'success'});
 			};
 
 			request.onerror = event => {
-				this.events.push({message: `Save to DB failed. Error: ${event.target.errorCode}`});
+				this.events.push({message: `Save to DB failed. Error: ${event.target.errorCode}`,type:'danger'});
 			}
 
-		},
-
-		getObjectStore(store_name, mode) {
-			const tx = window.db.transaction(store_name, mode);
-			return tx.objectStore(store_name);
 		},
 
 		addTodo() {
@@ -284,11 +281,11 @@ function todo () {
 			const request = objectStore.delete(todo.id);
 
 			request.onsuccess = event => {
-				this.events.push({message: `TODO ${todo.body} deleted`});
+				this.events.push({message: `TODO ${todo.body} deleted`,type:'success'});
 			};
 
 			request.onerror = event => {
-				this.events.push({message: `TODO ${todo.body} failed to delete. Error: ${event.target.errorCode}`});
+				this.events.push({message: `TODO ${todo.body} failed to delete. Error: ${event.target.errorCode}`,type:'danger'});
 			}
 		},
 

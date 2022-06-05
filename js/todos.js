@@ -1,12 +1,8 @@
-/*document.addEventListener('alpine:init', () => {
-	console.log('alpine inicialiazation');
-})*/
-
 function todo () {
 
 	return {
 
-		async init() {
+		init() {
 			this.events.push({message: `Alpine initialization start`});
 			this.dbGlobals.db = null; // The database object will eventually be stored here.
 			this.dbGlobals.description = "This database is used to store files locally."; // The description of the database.
@@ -15,14 +11,15 @@ function todo () {
 			this.dbGlobals.storeName = "todos"; // The name of the database's object store. Each object in the object store is a file object.
 			this.dbGlobals.message = ""; // When useful, contains one or more HTML strings to display to the user in the 'messages' DIV box.
 			this.dbGlobals.empty = true; // Indicates whether or not there's one or more records in the database object store. The object store is initially empty, so set this to true.
-			await this.openDB();
-			await this.loadTodos();
+			this.openDB();
+			setTimeout(() => {this.loadTodos();},100);
+
 			this.events.push({message: `Alpine initialization ended`});
 		},
 
-		async openDB() {
+		openDB() {
 			try {
-				let openRequest = await window.indexedDB.open(this.dbGlobals.name, this.dbGlobals.version); // Also passing an optional version number for this database.
+				let openRequest = window.indexedDB.open(this.dbGlobals.name, this.dbGlobals.version); // Also passing an optional version number for this database.
 
 				openRequest.onerror = (event) => {
 					this.events.push({message: "openRequest.onerror fired in openDB() - error: " + (event.target.error ? event.target.error : event.target.errorCode)});
@@ -57,38 +54,34 @@ function todo () {
 			}
 		},
 
-		async loadTodos() {
+		loadTodos() {
 			let transaction = '';
-			console.log(this.dbGlobals.db);
 
-			//this.todos.push({body:'test'});
 			try {
-				transaction = await this.dbGlobals.db.transaction(this.dbGlobals.storeName, 'readonly');
+				transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName, 'readonly');
 			} catch (ex) {
 				this.events.push({message: `this.dbGlobals.db.transaction exception in loadTodos() - ${ex.message}`});
 				return;
 			}
 
-			let objectStore = await transaction.objectStore(this.dbGlobals.storeName);
+			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
 
-			const cursorRequest = await objectStore.openCursor();
+			const cursorRequest = objectStore.openCursor();
 
 			cursorRequest.onerror = (evt) => {
 				this.events.push({message: "cursorRequest.onerror fired in displayDB() - error code: " + (evt.target.error ? evt.target.error : evt.target.errorCode)});
 			}
 
-			let tempTodos = [];
 			cursorRequest.onsuccess = (evt) => {
 
-				var cursor = evt.target.result;
+				const cursor = evt.target.result;
 				if (cursor) {
-					tempTodos.push({body: cursor.value.body,id:cursor.value.id})
+					this.todos.push({body: cursor.value.body,id:cursor.value.id})
 					console.log(cursor.value);
 					cursor.continue();
 				}
 			}
 
-			this.todos = tempTodos;
 			return this.todos;
 		},
 

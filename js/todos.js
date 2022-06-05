@@ -6,7 +6,7 @@ function todo () {
 
 	return {
 
-		init() {
+		async init() {
 			this.events.push({message: `Alpine initialization start`});
 			this.dbGlobals.db = null; // The database object will eventually be stored here.
 			this.dbGlobals.description = "This database is used to store files locally."; // The description of the database.
@@ -15,13 +15,14 @@ function todo () {
 			this.dbGlobals.storeName = "todos"; // The name of the database's object store. Each object in the object store is a file object.
 			this.dbGlobals.message = ""; // When useful, contains one or more HTML strings to display to the user in the 'messages' DIV box.
 			this.dbGlobals.empty = true; // Indicates whether or not there's one or more records in the database object store. The object store is initially empty, so set this to true.
-			this.openDB();
+			await this.openDB();
+			await this.loadTodos();
 			this.events.push({message: `Alpine initialization ended`});
 		},
 
-		openDB() {
+		async openDB() {
 			try {
-				let openRequest = window.indexedDB.open(this.dbGlobals.name, this.dbGlobals.version); // Also passing an optional version number for this database.
+				let openRequest = await window.indexedDB.open(this.dbGlobals.name, this.dbGlobals.version); // Also passing an optional version number for this database.
 
 				openRequest.onerror = (event) => {
 					this.events.push({message: "openRequest.onerror fired in openDB() - error: " + (event.target.error ? event.target.error : event.target.errorCode)});
@@ -42,7 +43,7 @@ function todo () {
 						});
 						this.events.push({message: `Object store ${this.dbGlobals.storeName} created`});
 					} catch (ex) {
-						this.events.push({message: `Exception in openDB_onupgradeneeded() - ${ex.message}`});
+						this.events.push({message: `Exception in onupgradeneeded - ${ex.message}`});
 					}
 
 				};
@@ -52,17 +53,48 @@ function todo () {
 					this.events.push({message: "Databased successfully opened"});
 				};
 			} catch (ex) {
-				this.events.push({message: "window.indexedDB.open exception in openDB() - " + ex.message});
+				this.events.push({message: `window.indexedDB.open exception in openDB() - ${ex.message}`});
 			}
+		},
+
+		async loadTodos() {
+			let transaction = '';
+			console.log(this.dbGlobals.db);
+
+			//this.todos.push({body:'test'});
+			try {
+				transaction = await this.dbGlobals.db.transaction(this.dbGlobals.storeName, 'readonly');
+			} catch (ex) {
+				this.events.push({message: `this.dbGlobals.db.transaction exception in loadTodos() - ${ex.message}`});
+				return;
+			}
+
+			let objectStore = await transaction.objectStore(this.dbGlobals.storeName);
+
+			const cursorRequest = await objectStore.openCursor();
+
+			cursorRequest.onerror = (evt) => {
+				this.events.push({message: "cursorRequest.onerror fired in displayDB() - error code: " + (evt.target.error ? evt.target.error : evt.target.errorCode)});
+			}
+
+			let tempTodos = [];
+			cursorRequest.onsuccess = (evt) => {
+
+				var cursor = evt.target.result;
+				if (cursor) {
+					tempTodos.push({body: cursor.value.body,id:cursor.value.id})
+					console.log(cursor.value);
+					cursor.continue();
+				}
+			}
+
+			this.todos = tempTodos;
+			return this.todos;
 		},
 
 		todos: [],
 
-		dbGlobals: {}, // Store all indexedDB related objects in a global object called "dbGlobals".
-
-		save() {
-			localStorage.setItem('todo-store', JSON.stringify(this.todos));
-		},
+		dbGlobals: {},
 
 		events: [],
 
@@ -72,9 +104,38 @@ function todo () {
 
 		filter: 'all',
 
-		get filteredTodos() {
+		/*get filteredTodos() {
+
+			let transaction = '';
+			try {
+				transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName, 'readonly');
+			} catch (ex) {
+				this.events.push({message: `this.dbGlobals.db.transaction exception in filteredTodos() - ${ex.message}`});
+				return;
+			}
+
+			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
+
+			const cursorRequest = objectStore.openCursor();
+
+			cursorRequest.onerror = (evt) => {
+				this.events.push({message: "cursorRequest.onerror fired in displayDB() - error code: " + (evt.target.error ? evt.target.error : evt.target.errorCode)});
+			}
+
+			let tempTodos = [];
+			cursorRequest.onsuccess = (evt) => {
+
+				var cursor = evt.target.result;
+				if (cursor) {
+					tempTodos.push({body: cursor.value.body,id:cursor.value.id})
+					console.log(cursor.value);
+					cursor.continue();
+				}
+			}
+
+			this.todos = tempTodos;
 			return this.todos;
-		},
+		},*/
 
 		/*async get filteredTodos() {
 
@@ -173,10 +234,6 @@ function todo () {
 			};
 		},*/
 
-		loadTodos() {
-
-		},
-
 		saveDB(todo) {
 
 			let transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
@@ -184,14 +241,15 @@ function todo () {
 
 			const request = objectStore.add(todo);
 			request.onsuccess = event => {
-				// event.target.result === customer.ssn;
+				this.events.push({message: "Saved to DB"});
 			};
 
 			request.onerror = event => {
-
+				this.events.push({message: "Save to DB failed"});
 			}
 
 		},
+
 		getObjectStore(store_name, mode) {
 			const tx = window.db.transaction(store_name, mode);
 			return tx.objectStore(store_name);
@@ -279,8 +337,6 @@ function todo () {
 
 		completeTodo(todo) {
 			todo.completed = !todo.completed;
-
-			this.save();
 		},
 
 		editTodo(todo) {
@@ -304,7 +360,6 @@ function todo () {
 
 			this.editedTodo = null;
 
-			this.save();
 		},
 
 		toggleAllTodos() {
@@ -312,13 +367,10 @@ function todo () {
 
 			this.todos.forEach(todo => todo.completed = !allComplete);
 
-			this.save();
 		},
 
 		clearCompleted() {
 			this.todos = this.active;
-
-			this.save();
 		},
 	}
 }

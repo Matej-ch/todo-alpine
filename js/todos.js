@@ -12,7 +12,8 @@ function todo () {
 			this.dbGlobals.message = ""; // When useful, contains one or more HTML strings to display to the user in the 'messages' DIV box.
 			this.dbGlobals.empty = true; // Indicates whether or not there's one or more records in the database object store. The object store is initially empty, so set this to true.
 			this.openDB();
-			setTimeout(() => {this.loadTodos();},100);
+
+			this.$nextTick(() => {this.loadTodos()});
 
 			this.events.push({message: `Alpine initialization ended`});
 		},
@@ -76,8 +77,7 @@ function todo () {
 
 				const cursor = evt.target.result;
 				if (cursor) {
-					this.todos.push({body: cursor.value.body,id:cursor.value.id})
-					console.log(cursor.value);
+					this.todos.push({body: cursor.value.body,id:cursor.value.ID})
 					cursor.continue();
 				}
 			}
@@ -234,11 +234,11 @@ function todo () {
 
 			const request = objectStore.add(todo);
 			request.onsuccess = event => {
-				this.events.push({message: "Saved to DB"});
+				this.events.push({message: `TODO ${todo.body} Saved to DB`});
 			};
 
 			request.onerror = event => {
-				this.events.push({message: "Save to DB failed"});
+				this.events.push({message: `Save to DB failed. Error: ${event.target.errorCode}`});
 			}
 
 		},
@@ -273,59 +273,23 @@ function todo () {
 			let position = this.todos.indexOf(todo);
 			this.todos.splice(position,1);
 
-			this.deleteTodoDB(todo.id);
-
-			this.save();
-
+			this.deleteTodoDB(todo);
 		},
 
-		deleteTodoDB(id) {
+		deleteTodoDB(todo) {
 
-			console.log("deletePublication:", arguments);
-			const store = this.getObjectStore(this.db_store_name, 'readwrite');
-			let req = store.index('id');
+			let transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
+			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
 
-			req.get(id).onsuccess = function(evt) {
-				if (typeof evt.target.result == 'undefined') {
-					console.log("No matching record found");
-					return;
-				}
+			const request = objectStore.delete(todo.id);
 
-				// As per spec http://www.w3.org/TR/IndexedDB/#object-store-deletion-operation
-				// the result of the Object Store Deletion Operation algorithm is
-				// undefined, so it's not possible to know if some records were actually
-				// deleted by looking at the request result.
-				let todorReq = store.get(evt.target.result.id);
-
-				todorReq.onsuccess = function(evt) {
-					var record = evt.target.result;
-					console.log("record:", record);
-					if (typeof record == 'undefined') {
-						console.log("No matching record found");
-						return;
-					}
-					// Warning: The exact same key used for creation needs to be passed for
-					// the deletion. If the key was a Number for creation, then it needs to
-					// be a Number for deletion.
-					var deleteReq = store.delete(evt.target.result.id);
-					deleteReq.onsuccess = function(evt) {
-						console.log("evt:", evt);
-						console.log("evt.target:", evt.target);
-						console.log("evt.target.result:", evt.target.result);
-						console.log("delete successful");
-					};
-					deleteReq.onerror = function (evt) {
-						console.error("deletePublication:", evt.target.errorCode);
-					};
-				};
-				todorReq.onerror = function (evt) {
-					console.error("deletePublication:", evt.target.errorCode);
-				};
-			}
-			req.onerror = function (evt) {
-				console.error("deletePublicationFromBib:", evt.target.errorCode);
+			request.onsuccess = event => {
+				this.events.push({message: `TODO ${todo.body} deleted`});
 			};
 
+			request.onerror = event => {
+				this.events.push({message: `TODO ${todo.body} failed to delete. Error: ${event.target.errorCode}`});
+			}
 		},
 
 		completeTodo(todo) {

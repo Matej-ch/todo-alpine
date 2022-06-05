@@ -1,7 +1,45 @@
+/*document.addEventListener('alpine:init', () => {
+	console.log('alpine inicialiazation');
+})*/
+
 function todo () {
 
 	return {
+
+		init() {
+			this.dbGlobals.db = null; // The database object will eventually be stored here.
+			this.dbGlobals.description = "This database is used to store files locally."; // The description of the database.
+			this.dbGlobals.name = "localFileStorage"; // The name of the database.
+			this.dbGlobals.version = 1; // Must be >= 1. Be aware that a database of a given name may only have one version at a time, on the client machine.
+			this.dbGlobals.storeName = "todos"; // The name of the database's object store. Each object in the object store is a file object.
+			this.dbGlobals.message = ""; // When useful, contains one or more HTML strings to display to the user in the 'messages' DIV box.
+			this.dbGlobals.empty = true; // Indicates whether or not there's one or more records in the database object store. The object store is initially empty, so set this to true.
+			this.openDB();
+		},
+
+		openDB() {
+			console.log('open');
+
+			try {
+				var openRequest = window.indexedDB.open(this.dbGlobals.name, this.dbGlobals.version); // Also passing an optional version number for this database.
+
+				openRequest.onerror = (event) => {
+					console.log("openRequest.onerror fired in openDB() - error: " + (event.target.error ? event.target.error : event.target.errorCode));
+				} // Some browsers may only support the errorCode property.
+
+				//openRequest.onblocked = openDB_onblocked; // Called if the database is opened via another process, or similar.
+				//openRequest.onupgradeneeded = openDB_onupgradeneeded; // Called if the database doesn't exist or the database version values don't match.
+				openRequest.onsuccess = (event) => {
+					console.log('Its success: ',event.target.result);
+				}; // Attempts to open an existing database (that has a correctly matching version value).
+			} catch (ex) {
+				console.log("window.indexedDB.open exception in openDB() - " + ex.message);
+			}
+		},
+
 		todos: [],
+
+		dbGlobals: {}, // Store all indexedDB related objects in a global object called "dbGlobals".
 
 		save() {
 			localStorage.setItem('todo-store', JSON.stringify(this.todos));

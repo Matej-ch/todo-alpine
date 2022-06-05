@@ -63,7 +63,7 @@
 				<button class="clear-completed" @click="clearCompleted" x-show="completed.length">Clear completed</button>
 			</footer>
 
-			<div class="events" x-show="events.length">
+			<div class="events" x-show="events.length" style="max-height: 250px;overflow-y: auto">
 
 				<template x-for="event in events.reverse()">
 					<div class="event" x-text="event.message" :class="styles[event.type]" style="padding: 0.35rem"></div>

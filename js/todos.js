@@ -77,7 +77,7 @@ function todo () {
 
 				const cursor = evt.target.result;
 				if (cursor) {
-					this.todos.push({body: cursor.value.body,id:cursor.value.ID})
+					this.todos.push({body: cursor.value.body,id:cursor.value.ID,completed: cursor.value.completed})
 					cursor.continue();
 				}
 			}
@@ -290,11 +290,57 @@ function todo () {
 		},
 
 		completeTodo(todo) {
-			todo.completed = !todo.completed;
+
+			let transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
+			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
+
+			const request = objectStore.get(todo.id);
+
+			request.onerror = event => {
+				this.events.push({message: `TODO ${todo.body} cannot be retrieved. Error: ${event.target.errorCode}`,type:'danger'});
+			};
+
+			request.onsuccess = event => {
+
+				const data = event.target.result;
+				data.completed = !data.completed;
+
+				const requestUpdate = objectStore.put(data);
+				requestUpdate.onerror = event => {
+					this.events.push({message: `TODO ${todo.body} cannot be updated. Error: ${event.target.errorCode}`,type:'danger'});
+				};
+				requestUpdate.onsuccess = event => {
+					todo.completed = !todo.completed;
+					this.events.push({message: `TODO ${todo.body} Updated.`,type:'success'});
+				};
+			}
 		},
 
 		editTodo(todo) {
 			todo.cachedBody = todo.body;
+
+			let transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
+			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
+
+			const request = objectStore.get(todo.id);
+
+			request.onerror = event => {
+				this.events.push({message: `TODO ${todo.body} cannot be retrieved. Error: ${event.target.errorCode}`,type:'danger'});
+			};
+
+			request.onsuccess = event => {
+
+				const data = event.target.result;
+				data.body = todo.body;
+
+				const requestUpdate = objectStore.put(data);
+				requestUpdate.onerror = event => {
+					// Do something with the error
+				};
+				requestUpdate.onsuccess = event => {
+					// Success - the data is updated!
+				};
+			}
 
 			this.editedTodo = todo;
 		},

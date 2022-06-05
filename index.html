@@ -65,13 +65,14 @@
 
 			<div class="events" x-show="events.length">
 
-				<template x-for="event in events">
-					<div class="event" x-text="event.message"></div>
+				<template x-for="event in events.reverse()">
+					<div class="event" x-text="event.message" style="padding: 0.35rem"></div>
 				</template>
 
 			</div>
 
 		</section>
+
 		<footer class="info">
 			<p>Double-click to edit a todo</p>
 		</footer>

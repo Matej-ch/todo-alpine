@@ -7,6 +7,7 @@ function todo () {
 	return {
 
 		init() {
+			this.events.push({message: `Alpine initialization start`});
 			this.dbGlobals.db = null; // The database object will eventually be stored here.
 			this.dbGlobals.description = "This database is used to store files locally."; // The description of the database.
 			this.dbGlobals.name = "localFileStorage"; // The name of the database.
@@ -15,25 +16,43 @@ function todo () {
 			this.dbGlobals.message = ""; // When useful, contains one or more HTML strings to display to the user in the 'messages' DIV box.
 			this.dbGlobals.empty = true; // Indicates whether or not there's one or more records in the database object store. The object store is initially empty, so set this to true.
 			this.openDB();
+			this.events.push({message: `Alpine initialization ended`});
 		},
 
 		openDB() {
-			console.log('open');
-
 			try {
-				var openRequest = window.indexedDB.open(this.dbGlobals.name, this.dbGlobals.version); // Also passing an optional version number for this database.
+				let openRequest = window.indexedDB.open(this.dbGlobals.name, this.dbGlobals.version); // Also passing an optional version number for this database.
 
 				openRequest.onerror = (event) => {
-					console.log("openRequest.onerror fired in openDB() - error: " + (event.target.error ? event.target.error : event.target.errorCode));
-				} // Some browsers may only support the errorCode property.
+					this.events.push({message: "openRequest.onerror fired in openDB() - error: " + (event.target.error ? event.target.error : event.target.errorCode)});
+				}
 
-				//openRequest.onblocked = openDB_onblocked; // Called if the database is opened via another process, or similar.
-				//openRequest.onupgradeneeded = openDB_onupgradeneeded; // Called if the database doesn't exist or the database version values don't match.
+				openRequest.onblocked = (event) => {
+					this.events.push({message: `The database is blocked - error code: + ${(event.target.error ? event.target.error : event.target.errorCode)}`});
+					this.events.push({message: `If this page is open in other browser windows, close these windows.`});
+				};
+
+				openRequest.onupgradeneeded = (event) => {
+					this.dbGlobals.db = event.target.result;
+
+					try {
+						this.dbGlobals.db.createObjectStore(this.dbGlobals.storeName, {
+							keyPath: "ID",
+							autoIncrement: true
+						});
+						this.events.push({message: `Object store ${this.dbGlobals.storeName} created`});
+					} catch (ex) {
+						this.events.push({message: `Exception in openDB_onupgradeneeded() - ${ex.message}`});
+					}
+
+				};
+
 				openRequest.onsuccess = (event) => {
-					console.log('Its success: ',event.target.result);
-				}; // Attempts to open an existing database (that has a correctly matching version value).
+					this.dbGlobals.db = event.target.result;
+					this.events.push({message: "Databased successfully opened"});
+				};
 			} catch (ex) {
-				console.log("window.indexedDB.open exception in openDB() - " + ex.message);
+				this.events.push({message: "window.indexedDB.open exception in openDB() - " + ex.message});
 			}
 		},
 
@@ -45,11 +64,7 @@ function todo () {
 			localStorage.setItem('todo-store', JSON.stringify(this.todos));
 		},
 
-		events: {},
-
-		db_name:'demo-indexeddb-todos',
-		db_version: 3,
-		db_store_name:'todos',
+		events: [],
 
 		newTodo: '',
 
@@ -163,22 +178,18 @@ function todo () {
 		},
 
 		saveDB(todo) {
-			const store = this.getObjectStore(this.db_store_name, 'readwrite');
-			let req;
 
-			try {
-				req = store.add(todo);
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					throw e;
+			let transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
+			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
+
+			const request = objectStore.add(todo);
+			request.onsuccess = event => {
+				// event.target.result === customer.ssn;
+			};
+
+			request.onerror = event => {
+
 			}
-
-			req.onsuccess = function (evt) {
-				console.log("Insertion in DB successful");
-			};
-			req.onerror = function() {
-				console.error("addPublication error", this.error);
-			};
 
 		},
 		getObjectStore(store_name, mode) {
@@ -197,8 +208,6 @@ function todo () {
 				body: this.newTodo,
 				completed: false,
 			});
-
-			this.save();
 
 			this.saveDB({
 				id: todoDate,

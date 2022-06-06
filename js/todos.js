@@ -256,6 +256,24 @@ function todo () {
 		toggleAllTodos() {
 			let allComplete = this.allComplete;
 
+			const transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName, 'readwrite');
+			const objectStore = transaction.objectStore(this.dbGlobals.storeName);
+			const cursorRequest = objectStore.openCursor();
+
+			cursorRequest.onerror = (evt) => {
+				this.events.push({message: "cursorRequest.onerror fired in toggleAllTodos() - error code: " + (evt.target.error ? evt.target.error : evt.target.errorCode),type:'danger'});
+			}
+
+			cursorRequest.onsuccess = (evt) => {
+				const cursor = evt.target.result;
+				if(cursor) {
+
+					cursor.value.completed = !allComplete
+					cursor.update(cursor.value);
+					cursor.continue();
+				}
+			}
+
 			this.todos.forEach(todo => todo.completed = !allComplete);
 
 		},

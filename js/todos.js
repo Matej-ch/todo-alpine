@@ -166,8 +166,8 @@ function todo () {
 
 		deleteTodoDB(todo) {
 
-			let transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
-			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
+			const transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
+			const objectStore = transaction.objectStore(this.dbGlobals.storeName);
 
 			const request = objectStore.delete(todo.id);
 
@@ -182,8 +182,8 @@ function todo () {
 
 		completeTodo(todo) {
 
-			let transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
-			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
+			const transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
+			const objectStore = transaction.objectStore(this.dbGlobals.storeName);
 
 			const request = objectStore.get(todo.id);
 
@@ -209,9 +209,20 @@ function todo () {
 
 		editTodo(todo) {
 			todo.cachedBody = todo.body;
+			this.editedTodo = todo;
+		},
 
-			let transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
-			let objectStore = transaction.objectStore(this.dbGlobals.storeName);
+		cancelEdit(todo) {
+			todo.body = todo.cachedBody;
+
+			this.editedTodo = null;
+
+			delete todo.cachedBody;
+		},
+
+		editComplete(todo) {
+			const transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName,'readwrite');
+			const objectStore = transaction.objectStore(this.dbGlobals.storeName);
 
 			const request = objectStore.get(todo.id);
 
@@ -226,27 +237,11 @@ function todo () {
 
 				const requestUpdate = objectStore.put(data);
 				requestUpdate.onerror = event => {
-					// Do something with the error
+					this.events.push({message: `TODO ${todo.body} cannot be updated. Error: ${event.target.errorCode}`,type:'danger'});
 				};
 				requestUpdate.onsuccess = event => {
-					// Success - the data is updated!
+					this.events.push({message: `TODO ${todo.body} Updated.`,type:'success'});
 				};
-			}
-
-			this.editedTodo = todo;
-		},
-
-		cancelEdit(todo) {
-			todo.body = todo.cachedBody;
-
-			this.editedTodo = null;
-
-			delete todo.cachedBody;
-		},
-
-		editComplete(todo) {
-			if(todo.body.trim() === '') {
-				this.deleteTodo(todo);
 			}
 
 			this.editedTodo = null;

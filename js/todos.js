@@ -279,6 +279,24 @@ function todo () {
 		},
 
 		clearCompleted() {
+
+			const transaction = this.dbGlobals.db.transaction(this.dbGlobals.storeName, 'readwrite');
+			const objectStore = transaction.objectStore(this.dbGlobals.storeName);
+
+			this.todos.map(todo => {
+				if(todo.completed) {
+					const request = objectStore.delete(todo.id);
+
+					request.onsuccess = event => {
+						this.events.push({message: `TODO ${todo.body} deleted`,type:'success'});
+					};
+
+					request.onerror = event => {
+						this.events.push({message: `TODO ${todo.body} failed to delete. Error: ${event.target.errorCode}`,type:'danger'});
+					}
+				}
+			})
+
 			this.todos = this.active;
 		},
 	}
